@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="es" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GRAVAFILT 3.0 | Micrositio Especializado de Mallas y Cinética de Zaranda</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+        .glass-panel { background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(16px); border: 1px solid rgba(51, 65, 85, 0.4); }
+    </style>
+</head>
+<body class="bg-[#020617] text-slate-100 min-h-screen flex flex-col selection:bg-amber-500 selection:text-slate-950">
+
+    <!-- HEADER EJECUTIVO / DIRECTORIO -->
+    <header class="border-b border-slate-800/80 glass-panel sticky top-0 z-50 px-4 md:px-8 py-4 flex flex-col md:flex-row justify-between items-center gap-4 shadow-xl">
+        <div class="flex items-center space-x-3 w-full md:w-auto justify-between md:justify-start">
+            <div class="flex items-center space-x-3">
+                <div class="w-3.5 h-3.5 bg-amber-500 rounded-full animate-pulse shadow-[0_0_15px_rgba(245,158,11,0.8)]"></div>
+                <h1 class="text-base md:text-xl font-extrabold tracking-wider bg-gradient-to-r from-white via-slate-200 to-amber-500 bg-clip-text text-transparent">
+                    GRAVAFILT <span class="text-amber-500 font-light text-xs md:text-sm">| MICROSITIO DE MALLAS & CINÉTICA</span>
+                </h1>
+            </div>
+            <span class="md:hidden px-2 py-0.5 bg-slate-900 border border-slate-800 rounded text-[10px] font-mono text-amber-500">Móvil / Tablet</span>
+        </div>
+        <div class="flex items-center gap-3 w-full md:w-auto justify-end">
+            <button onclick="tomarFotografiaMuestra()" class="flex-1 md:flex-none px-3.5 py-2 bg-slate-900 hover:bg-slate-800 border border-slate-700/80 rounded-xl text-xs font-semibold text-slate-200 transition-all flex items-center justify-center gap-2 shadow-sm">
+                <span>📸 Capturar Muestra</span>
+            </button>
+            <button onclick="exportarReportePDF()" class="flex-1 md:flex-none px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-xl text-xs font-bold transition-all shadow-[0_4px_20px_rgba(245,158,11,0.25)] flex items-center justify-center gap-2">
+                <span>📄 Reporte Ejecutivo</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- CONTENEDOR PRINCIPAL -->
+    <main class="flex-1 p-4 md:p-8 max-w-[1700px] w-full mx-auto grid grid-cols-1 xl:grid-cols-12 gap-6" id="reporte-contenido">
+
+        <!-- PANEL DE CONFIGURACIÓN Y CONTROLES TÉCNICOS -->
+        <section class="xl:col-span-4 space-y-6">
+            
+            <!-- 1. NUEVO MICROSITIO: CUADRO DE DISTRIBUCIÓN GRANULOMÉTRICA POR TAMICES -->
+            <div class="glass-panel p-5 md:p-6 rounded-2xl shadow-2xl space-y-4">
+                <div class="border-b border-slate-800 pb-3 flex justify-between items-center">
+                    <h2 class="text-xs md:text-sm font-bold tracking-wide uppercase text-amber-500 flex items-center gap-2">
+                        <span>🧪 Caracterización de Materia Prima</span>
+                    </h2>
+                    <span class="text-[10px] font-mono bg-slate-900 border border-slate-800 px-2 py-0.5 rounded text-amber-400">Entrada Dinámica</span>
+                </div>
+
+                <div class="space-y-2">
+                    <label class="text-xs text-slate-400 font-medium block">Selección de Receta Base:</label>
+                    <select id="materia-prima" onchange="cambiarMateriaPrimaBase()" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-amber-500 transition-colors shadow-inner">
+                        <option value="construccion">Arena de Río / Construcción General</option>
+                        <option value="resina">Sílice Industrial para Resinas (Alta Pureza)</option>
+                        <option value="frac">Arena de Fractura (Vaca Muerta / Frac Sand)</option>
+                    </select>
+                </div>
+
+                <!-- Tabla Interactiva de Tamices -->
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs">
+                        <thead>
+                            <tr class="border-b border-slate-800 text-slate-400">
+                                <th class="p-1.5">Tamiz</th>
+                                <th class="p-1.5">Abertura</th>
+                                <th class="p-1.5 text-right">% Retenido</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabla-tamices-entrada" class="divide-y divide-slate-800/40">
+                            <!-- Inyectado por JS -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Índices Geotécnicos Calculados -->
+                <div class="grid grid-cols-2 gap-2 pt-2 border-t border-slate-800/80 text-xs font-mono">
+                    <div class="bg-slate-900/90 p-2.5 rounded-xl border border-slate-800">
+                        <span class="text-slate-400 text-[10px] block">Módulo Fineza (FM)</span>
+                        <span id="val-fm" class="text-amber-400 font-bold text-sm">--</span>
+                    </div>
+                    <div class="bg-slate-900/90 p-2.5 rounded-xl border border-slate-800">
+                        <span class="text-slate-400 text-[10px] block">Tamaño Efectivo (D10)</span>
+                        <span id="val-d10" class="text-emerald-400 font-bold text-sm">-- mm</span>
+                    </div>
+                    <div class="bg-slate-900/90 p-2.5 rounded-xl border border-slate-800">
+                        <span class="text-slate-400 text-[10px] block">Coef. Uniformidad (Cu)</span>
+                        <span id="val-cu" class="text-sky-400 font-bold text-sm">--</span>
+                    </div>
+                    <div class="bg-slate-900/90 p-2.5 rounded-xl border border-slate-800">
+                        <span class="text-slate-400 text-[10px] block">Coef. Curvatura (Cc)</span>
+                        <span id="val-cc" class="text-purple-400 font-bold text-sm">--</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. PARÁMETROS OPERATIVOS DE ZARANDA Y MALLAS -->
+            <div class="glass-panel p-5 md:p-6 rounded-2xl shadow-2xl space-y-5">
+                <div class="border-b border-slate-800 pb-3 flex justify-between items-center">
+                    <h2 class="text-xs md:text-sm font-bold tracking-wide uppercase text-amber-500 flex items-center gap-2">
+                        <span>⚙️ Configuración de Mallas & Caudal</span>
+                    </h2>
+                </div>
+
+                <div class="space-y-2">
+                    <div class="flex justify-between text-xs">
+                        <span class="text-slate-400 font-medium">Caudal de Alimentación:</span>
+                        <span id="caudal-val" class="font-mono font-bold text-amber-500 text-sm">50 t/h</span>
+                    </div>
+                    <input type="range" id="caudal-input" min="10" max="150" value="50" step="5" 
+                           oninput="calcularModelo()" 
+                           class="w-full accent-amber-500 bg-slate-900 h-2.5 rounded-lg cursor-pointer">
+                </div>
+
+                <div class="space-y-2">
+                    <label class="text-xs text-slate-400 font-medium block">Cubiertas de Zaranda Activas:</label>
+                    <select id="pisos-select" onchange="alternarPisosVisibles()" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-3 text-xs text-slate-200 focus:outline-none focus:border-amber-500 transition-colors shadow-inner">
+                        <option value="2">Configuración 2 Pisos (Doble Cubierta)</option>
+                        <option value="3" selected>Configuración 3 Pisos (Triple Cubierta Alta Resolución)</option>
+                    </select>
+                </div>
+
+                <div class="space-y-4 pt-3 border-t border-slate-800/80">
+                    <h3 class="text-xs font-bold text-slate-300 uppercase tracking-wider">Selección de Mallas por Piso</h3>
+                    
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div class="space-y-1">
+                            <label class="text-[11px] text-slate-400 font-medium">Piso 1 - Superior</label>
+                            <select id="p1-m1" onchange="calcularModelo()" class="w-full bg-slate-900 border border-slate-800 rounded-lg p-2.5 text-xs text-slate-200"></select>
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-[11px] text-slate-400 font-medium">Auxiliar Superior</label>
+                            <select id="p1-m2" onchange="calcularModelo()" class="w-full bg-slate-900 border border-slate-800 rounded-lg p-2.5 text-xs text-slate-200"></select>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div class="space-y-1">
+                            <label class="text-[11px] text-slate-400 font-medium">Piso 2 - Intermedio</label>
+                            <select id="p2-m1" onchange="calcularModelo()" class="w-full bg-slate-900 border border-slate-800 rounded-lg p-2.5 text-xs text-slate-200"></select>
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-[11px] text-slate-400 font-medium">Auxiliar Intermedio</label>
+                            <select id="p2-m2" onchange="calcularModelo()" class="w-full bg-slate-900 border border-slate-800 rounded-lg p-2.5 text-xs text-slate-200"></select>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3" id="piso3-card">
+                        <div class="space-y-1">
+                            <label class="text-[11px] text-slate-400 font-medium">Piso 3 - Inferior (Finos)</label>
+                            <select id="p3-m1" onchange="calcularModelo()" class="w-full bg-slate-900 border border-slate-800 rounded-lg p-2.5 text-xs text-slate-200"></select>
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-[11px] text-slate-400 font-medium">Auxiliar Inferior</label>
+                            <select id="p3-m2" onchange="calcularModelo()" class="w-full bg-slate-900 border border-slate-800 rounded-lg p-2.5 text-xs text-slate-200"></select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- HISTORIAL DE MUESTRAS -->
+            <div class="glass-panel p-5 rounded-2xl shadow-xl space-y-3">
+                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-300">Historial de Muestras Registradas</h3>
+                <div id="historial-muestras" class="space-y-2 max-h-40 overflow-y-auto text-xs text-slate-400 font-mono">
+                    <p class="text-slate-600 italic">Sin muestras capturadas en esta sesión.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- PANEL DE VISUALIZACIÓN PROTAGONISTA & RESULTADOS POR PISO -->
+        <section class="xl:col-span-8 space-y-6 flex flex-col">
+
+            <!-- SIMULADOR CINÉTICO DE ZARANDA RECTANGULAR -->
+            <div class="glass-panel p-5 md:p-6 rounded-2xl shadow-2xl flex flex-col space-y-4 min-h-[400px]">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                    <div>
+                        <h2 class="text-xs md:text-sm font-bold uppercase tracking-wider text-amber-500">Simulación Cinética en Tiempo Real - Zaranda Rectangular GRAVAFILT</h2>
+                        <p class="text-xs text-slate-400">Emulación física multi-estrato de vibración armónica y separación por mallas técnicas.</p>
+                    </div>
+                    <span class="px-2.5 py-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full text-[10px] font-mono font-bold animate-pulse">● MOTOR ACTIVO</span>
+                </div>
+                <div id="simulador-camara" class="w-full flex-1 min-h-[300px] rounded-xl relative overflow-hidden bg-slate-950 border border-slate-800/80 shadow-inner">
+                    <canvas id="canvas-zaranda" class="w-full h-full block"></canvas>
+                </div>
+            </div>
+
+            <!-- NUEVO: RESULTADOS DE RENDIMIENTO GRANULOMÉTRICO Y MILIMÉTRICO POR PISO -->
+            <div class="glass-panel p-5 md:p-6 rounded-2xl shadow-xl space-y-4">
+                <h3 class="text-xs font-bold uppercase tracking-wider text-amber-500">📊 Resultados de Clasificación por Cubierta (Criba / Zaranda)</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4" id="cards-resultados-pisos">
+                    <!-- Inyectado dinámicamente según 2 o 3 pisos -->
+                </div>
+            </div>
+
+            <!-- KPIS EJECUTIVOS -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="glass-panel p-5 rounded-2xl border-l-4 border-l-amber-500 shadow-xl">
+                    <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Eficiencia Global</span>
+                    <span id="kpi-eficiencia" class="text-2xl font-extrabold font-mono text-white mt-1 block">--%</span>
+                    <span class="text-[10px] text-emerald-400 font-medium mt-1 block">Optimizado bajo norma ASTM E11</span>
+                </div>
+                <div class="glass-panel p-5 rounded-2xl border-l-4 border-l-emerald-500 shadow-xl">
+                    <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Caudal Conforme (Comercial)</span>
+                    <span id="kpi-conforme" class="text-2xl font-extrabold font-mono text-emerald-400 mt-1 block">-- t/h</span>
+                    <span class="text-[10px] text-slate-400 font-medium mt-1 block">Producto bajo especificación</span>
+                </div>
+                <div class="glass-panel p-5 rounded-2xl border-l-4 border-l-rose-500 shadow-xl">
+                    <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Caudal de Rechazo / Oversize</span>
+                    <span id="kpi-rechazo" class="text-2xl font-extrabold font-mono text-rose-400 mt-1 block">-- t/h</span>
+                    <span class="text-[10px] text-slate-400 font-medium mt-1 block">Retenido en desbaste superior</span>
+                </div>
+            </div>
+
+            <!-- GRÁFICO GRANULOMÉTRICO -->
+            <div class="glass-panel p-5 md:p-6 rounded-2xl shadow-xl space-y-4">
+                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-300">Curva Granulométrica Comparativa (Alimentación vs. Producto Obtenido)</h3>
+                <div class="h-60 md:h-72 w-full relative">
+                    <canvas id="chart-granulometria"></canvas>
+                </div>
+            </div>
+
+            <!-- CATÁLOGO TÉCNICO Y MITIGACIÓN -->
+            <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                <div class="glass-panel p-5 rounded-2xl shadow-xl space-y-3 overflow-x-auto">
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-amber-500">Catálogo Técnico de Mallas GRAVAFILT</h3>
+                    <table class="w-full text-left text-xs min-w-[400px]">
+                        <thead>
+                            <tr class="border-b border-slate-800 text-slate-400">
+                                <th class="p-2">ID</th>
+                                <th class="p-2">Abertura</th>
+                                <th class="p-2">Hilo</th>
+                                <th class="p-2">Material</th>
+                                <th class="p-2">Área %</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabla-mallas-body" class="divide-y divide-slate-800/50"></tbody>
+                    </table>
+                </div>
+
+                <div class="glass-panel p-5 rounded-2xl shadow-xl space-y-3">
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-amber-500">Mitigación de Cegamiento y Desgaste</h3>
+                    <div id="mapeo-problemas" class="space-y-3"></div>
+                </div>
+            </div>
+
+        </section>
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="border-t border-slate-800/80 py-6 text-center text-xs text-slate-500 glass-panel mt-12">
+        <p>GRAVAFILT S.A. Industrial Systems &copy; 2026 — Plataforma de Simulación Avanzada para Directorio y Accionistas.</p>
+    </footer>
+
+    <!-- SCRIPT DE INTERCONEXIÓN Y CÁLCULO -->
+    <script>
+        const catalogoMallas = [
+            { id: "M01", aberturaMm: 2.00, aberturaStr: "2.00 mm", hilo: "1.20 mm", material: "Acero Inoxidable AISI 304", area: 42.5 },
+            { id: "M02", aberturaMm: 1.40, aberturaStr: "1.40 mm", hilo: "0.90 mm", material: "Acero Alto Carbono Templado", area: 39.1 },
+            { id: "M03", aberturaMm: 1.00, aberturaStr: "1.00 mm", hilo: "0.63 mm", material: "Poliuretano Anti-abrasivo", area: 36.8 },
+            { id: "M04", aberturaMm: 0.71, aberturaStr: "0.71 mm", hilo: "0.45 mm", material: "Acero Inoxidable AISI 316", area: 34.2 },
+            { id: "M05", aberturaMm: 0.50, aberturaStr: "0.50 mm", hilo: "0.32 mm", material: "Poliuretano Flexible", area: 31.5 },
+            { id: "M06", aberturaMm: 0.35, aberturaStr: "0.35 mm", hilo: "0.22 mm", material: "Acero Alto Carbono", area: 28.4 },
+            { id: "M07", aberturaMm: 0.25, aberturaStr: "0.25 mm", hilo: "0.16 mm", material: "Poliuretano Elastomérico", area: 25.0 }
+        ];
+
+        // Definición de tamices base y recetas de materia prima con % retenido editable
+        let tamicesEntrada = [
+            { tamiz: "#10", aberturaMm: 2.00, retenido: 10 },
+            { tamiz: "#18", aberturaMm: 1.00, retenido: 25 },
+            { tamiz: "#35", aberturaMm: 0.50, retenido: 30 },
+            { tamiz: "#60", aberturaMm: 0.25, retenido: 25 },
+            { tamiz: "Base", aberturaMm: 0.10, retenido: 10 }
+        ];
+
+        let chartGranulometria = null;
+        let particulas = [];
+
+        function poblarSelectores() {
+            const selects = ['p1-m1', 'p1-m2', 'p2-m1', 'p2-m2', 'p3-m1', 'p3-m2'];
+            selects.forEach((id, index) => {
+                const el = document.getElementById(id);
+                if (!el) return;
+                el.innerHTML = '';
+                catalogoMallas.forEach((m, idx) => {
+                    const opt = document.createElement('option');
+                    opt.value = m.id;
+                    opt.textContent = `${m.id} (${m.aberturaStr} - ${m.material.split(' ')[0]})`;
+                    if (index === 0 && idx === 0) opt.selected = true;
+                    if (index === 1 && idx === 1) opt.selected = true;
+                    if (index === 2 && idx === 2) opt.selected = true;
+                    if (index === 3 && idx === 3) opt.selected = true;
+                    if (index === 4 && idx === 4) opt.selected = true;
+                    if (index === 5 && idx === 5) opt.selected = true;
+                    el.appendChild(opt);
+                });
+            });
+            renderizarTablaMallas();
+            renderizarTablaTamicesEntrada();
+            renderizarProblemas();
+        }
+
+        function renderizarTablaTamicesEntrada() {
+            const tbody = document.getElementById('tabla-tamices-entrada');
+            tbody.innerHTML = '';
+            tamicesEntrada.forEach((t, i) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="p-1.5 font-mono text-amber-400">${t.tamiz}</td>
+                    <td class="p-1.5 font-mono text-slate-300">${t.aberturaMm} mm</td>
+                    <td class="p-1.5 text-right">
+                        <input type="number" min="0" max="100" value="${t.retenido}" onchange="actualizarRetenidoTamiz(${i}, this.value)" class="w-16 bg-slate-950 border border-slate-800 text-center rounded p-1 font-mono text-amber-400 text-xs"> %
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+            calcularIndicesGeotecnicos();
+        }
+
+        function actualizarRetenidoTamiz(index, val) {
+            tamicesEntrada[index].retenido = parseFloat(val) || 0;
+            calcularIndicesGeotecnicos();
+            calcularModelo();
+        }
+
+        function cambiarMateriaPrimaBase() {
+            const tipo = document.getElementById('materia-prima').value;
+            if (tipo === 'construccion') {
+                tamicesEntrada = [
+                    { tamiz: "#10", aberturaMm: 2.00, retenido: 10 },
+                    { tamiz: "#18", aberturaMm: 1.00, retenido: 25 },
+                    { tamiz: "#35", aberturaMm: 0.50, retenido: 30 },
+                    { tamiz: "#60", aberturaMm: 0.25, retenido: 25 },
+                    { tamiz: "Base", aberturaMm: 0.10, retenido: 10 }
+                ];
+            } else if (tipo === 'resina') {
+                tamicesEntrada = [
+                    { tamiz: "#10", aberturaMm: 2.00, retenido: 5 },
+                    { tamiz: "#18", aberturaMm: 1.00, retenido: 15 },
+                    { tamiz: "#35", aberturaMm: 0.50, retenido: 45 },
+                    { tamiz: "#60", aberturaMm: 0.25, retenido: 25 },
+                    { tamiz: "Base", aberturaMm: 0.10, retenido: 10 }
+                ];
+            } else if (tipo === 'frac') {
+                tamicesEntrada = [
+                    { tamiz: "#10", aberturaMm: 2.00, retenido: 2 },
+                    { tamiz: "#18", aberturaMm: 1.00, retenido: 8 },
+                    { tamiz: "#35", aberturaMm: 0.50, retenido: 50 },
+                    { tamiz: "#60", aberturaMm: 0.25, retenido: 35 },
+                    { tamiz: "Base", aberturaMm: 0.10, retenido: 5 }
+                ];
+            }
+            renderizarTablaTamicesEntrada();
+            calcularModelo();
+        }
+
+        function calcularIndicesGeotecnicos() {
+            // Calcular retenido acumulado para FM y diámetros característicos D10, D30, D60
+            let acumulado = 0;
+            let sumaRetenidosParcialesParaFM = 0;
+            
+            let tablaAcumulada = tamicesEntrada.map(t => {
+                acumulado += t.retenido;
+                sumaRetenidosParcialesParaFM += acumulado;
+                return { abertura: t.aberturaMm, acumuladoPct: acumulado };
+            });
+
+            // Módulo de Fineza (FM) = Suma de retenidos acumulados en % de tamices estándar / 100
+            let fm = (sumaRetenidosParcialesParaFM / 100).toFixed(2);
+
+            // Interpolación aproximada para D10, D30, D60 (% pasante = 100 - acumuladoPct)
+            function interpolarDiametro(pctBuscado) {
+                let prev = { abertura: tamicesEntrada[tamicesEntrada.length-1].aberturaMm, pasante: 0 };
+                for (let i = tamicesEntrada.length - 1; i >= 0; i--) {
+                    let pasanteActual = 100 - tablaAcumulada[i].acumuladoPct;
+                    if (pasanteActual >= pctBuscado) {
+                        let aberturaActual = tamicesEntrada[i].aberturaMm;
+                        // Interpolación lineal simple
+                        if (prev.pasante !== pasanteActual) {
+                            let factor = (pctBuscado - prev.pasante) / (pasanteActual - prev.pasante);
+                            return prev.abertura + factor * (aberturaActual - prev.abertura);
+                        }
+                        return aberturaActual;
+                    }
+                    prev = { abertura: tamicesEntrada[i].aberturaMm, pasante: pasanteActual };
+                }
+                return tamicesEntrada[0].aberturaMm;
+            }
+
+            let d10 = interpolarDiametro(10);
+            let d30 = interpolarDiametro(30);
+            let d60 = interpolarDiametro(60);
+
+            let cu = d10 > 0 ? (d60 / d10).toFixed(2) : "0.00";
+            let cc = (d10 > 0 && d60 > 0) ? ((d30 * d30) / (d60 * d10)).toFixed(2) : "0.00";
+
+            document.getElementById('val-fm').textContent = fm;
+            document.getElementById('val-d10').textContent = d10.toFixed(2) + ' mm';
+            document.getElementById('val-cu').textContent = cu;
+            document.getElementById('val-cc').textContent = cc;
+        }
+
+        function renderizarTablaMallas() {
+            const tbody = document.getElementById('tabla-mallas-body');
+            tbody.innerHTML = '';
+            catalogoMallas.forEach(m => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-slate-900/40 transition-colors';
+                tr.innerHTML = `
+                    <td class="p-2 font-mono font-bold text-amber-400">${m.id}</td>
+                    <td class="p-2 font-mono">${m.aberturaStr}</td>
+                    <td class="p-2 text-slate-400">${m.hilo}</td>
+                    <td class="p-2 text-slate-300">${m.material}</td>
+                    <td class="p-2 font-mono text-emerald-400">${m.area}%</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function renderizarProblemas() {
+            const contenedor = document.getElementById('mapeo-problemas');
+            const dataProblemas = [
+                { problema: "Cegamiento por humedad elevada (>8%)", solucion: "Implementar mallas de poliuretano flexible con efecto trampolín y alta elongación." },
+                { problema: "Desgaste prematuro en zona de impacto", solucion: "Instalar sobremallas de refuerzo en sección de alimentación inicial con acero antiabrasivo HB450." },
+                { problema: "Baja eficiencia de corte en finos (<0.3mm)", solucion: "Ajustar frecuencia de vibración a 950-1000 RPM y ángulo de inclinación a 18°." }
+            ];
+            contenedor.innerHTML = dataProblemas.map(p => `
+                <div class="p-3 bg-slate-900/80 rounded-xl border border-slate-800 space-y-1 text-xs">
+                    <span class="text-rose-400 font-bold block">⚠️ ${p.problema}</span>
+                    <span class="text-slate-300 block">💡 <strong>Mitigación:</strong> ${p.solucion}</span>
+                </div>
+            `).join('');
+        }
+
+        function alternarPisosVisibles() {
+            const pisos = document.getElementById('pisos-select').value;
+            const piso3Card = document.getElementById('piso3-card');
+            piso3Card.style.display = pisos === '2' ? 'none' : 'grid';
+            calcularModelo();
+        }
+
+        function calcularModelo() {
+            const caudal = parseFloat(document.getElementById('caudal-input').value) || 50;
+            const numPisos = parseInt(document.getElementById('pisos-select').value) || 3;
+            
+            // Obtener mallas seleccionadas
+            const idM1 = document.getElementById('p1-m1').value;
+            const idM2 = document.getElementById('p2-m1').value;
+            const idM3 = document.getElementById('p3-m1') ? document.getElementById('p3-m1').value : null;
+
+            const m1Obj = catalogoMallas.find(m => m.id === idM1) || catalogoMallas[0];
+            const m2Obj = catalogoMallas.find(m => m.id === idM2) || catalogoMallas[1];
+            const m3Obj = numPisos === 3 ? (catalogoMallas.find(m => m.id === idM3) || catalogoMallas[2]) : null;
+
+            // Simulación de distribución de caudal y granulometría por piso basada en aberturas
+            let caudalRestante = caudal;
+            
+            // Piso 1 (Superior)
+            let rechazoP1 = caudalRestante * 0.25;
+            caudalRestante -= rechazoP1;
+            let granulometriaP1 = `Retenido > ${m1Obj.aberturaStr}`;
+
+            // Piso 2 (Intermedio)
+            let rechazoP2 = numPisos === 3 ? (caudalRestante * 0.40) : (caudalRestante * 0.60);
+            caudalRestante -= rechazoP2;
+            let granulometriaP2 = `Corte ${m2Obj.aberturaStr} - ${m1Obj.aberturaStr}`;
+
+            // Piso 3 (Inferior) o Pasante final
+            let rechazoP3 = numPisos === 3 ? caudalRestante * 0.50 : 0;
+            let pasanteFinal = caudalRestante - rechazoP3;
+            let granulometriaP3 = numPisos === 3 ? `Corte ${m3Obj.aberturaStr} - ${m2Obj.aberturaStr}` : `Pasante < ${m2Obj.aberturaStr}`;
+
+            // Renderizar tarjetas de resultados por piso
+            const contenedorPisos = document.getElementById('cards-resultados-pisos');
+            let htmlPisos = `
+                <div class="glass-panel p-4 rounded-xl border-l-4 border-l-amber-500 space-y-1">
+                    <span class="text-[10px] font-bold text-slate-400 uppercase">Cubierta Piso 1 (Superior)</span>
+                    <span class="text-lg font-extrabold font-mono text-white block">${rechazoP1.toFixed(1)} t/h</span>
+                    <span class="text-[11px] text-amber-400 font-mono block">Milímetros: ${m1Obj.aberturaStr}</span>
+                    <span class="text-[10px] text-slate-300 block">Granulometría: ${granulometriaP1}</span>
+                </div>
+                <div class="glass-panel p-4 rounded-xl border-l-4 border-l-emerald-500 space-y-1">
+                    <span class="text-[10px] font-bold text-slate-400 uppercase">Cubierta Piso 2 (Intermedio)</span>
+                    <span class="text-lg font-extrabold font-mono text-emerald-400 block">${rechazoP2.toFixed(1)} t/h</span>
+                    <span class="text-[11px] text-emerald-400 font-mono block">Milímetros: ${m2Obj.aberturaStr}</span>
+                    <span class="text-[10px] text-slate-300 block">Granulometría: ${granulometriaP2}</span>
+                </div>
+            `;
+
+            if (numPisos === 3 && m3Obj) {
+                htmlPisos += `
+                    <div class="glass-panel p-4 rounded-xl border-l-4 border-l-sky-500 space-y-1">
+                        <span class="text-[10px] font-bold text-slate-400 uppercase">Cubierta Piso 3 (Inferior)</span>
+                        <span class="text-lg font-extrabold font-mono text-sky-400 block">${rechazoP3.toFixed(1)} t/h</span>
+                        <span class="text-[11px] font-mono text-sky-400 block">Milímetros: ${m3Obj.aberturaStr}</span>
+                        <span class="text-[10px] text-slate-300 block">Granulometría: ${granulometriaP3}</span>
+                    </div>
+                `;
+            }
+            contenedorPisos.innerHTML = htmlPisos;
+
+            // KPIs globales
+            let conforme = (caudal - rechazoP1).toFixed(1);
+            let rechazo = rechazoP1.toFixed(1);
+            let eficiencia = ((conforme / caudal) * 100).toFixed(1);
+
+            document.getElementById('kpi-eficiencia').textContent = eficiencia + '%';
+            document.getElementById('kpi-conforme').textContent = conforme + ' t/h';
+            document.getElementById('kpi-rechazo').textContent = rechazo + ' t/h';
+
+            actualizarGraficoGranulometria();
+        }
+
+        function actualizarGraficoGranulometria() {
+            const ctx = document.getElementById('chart-granulometria').getContext('2d');
+            
+            let dataAlimentacion = tamicesEntrada.map(t => t.retenido);
+            let dataProducto = dataAlimentacion.map(v => Math.max(0, (v * 0.75).toFixed(1)));
+
+            if (chartGranulometria) chartGranulometria.destroy();
+
+            chartGranulometria = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: tamicesEntrada.map(t => `${t.aberturaMm}mm (${t.tamiz})`),
+                    datasets: [
+                        {
+                            label: 'Alimentación (% Retenido)',
+                            data: dataAlimentacion,
+                            borderColor: '#94a3b8',
+                            borderWidth: 2,
+                            borderDash: [5, 5],
+                            tension: 0.3,
+                            pointRadius: 3
+                        },
+                        {
+                            label: 'Producto Comercial Salida (%)',
+                            data: dataProducto,
+                            borderColor: '#f59e0b',
+                            backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                            borderWidth: 3,
+                            fill: true,
+                            tension: 0.3,
+                            pointRadius: 4,
+                            pointBackgroundColor: '#f59e0b'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { labels: { color: '#94a3b8', font: { family: 'Plus Jakarta Sans', size: 11 } } }
+                    },
+                    scales: {
+                        y: {
+                            grid: { color: '#1e293b' },
+                            ticks: { color: '#94a3b8', callback: v => v + '%' },
+                            max: 100,
+                            min: 0
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { color: '#94a3b8', font: { size: 10 } }
+                        }
+                    }
+                }
+            });
+        }
+
+        function inicializarSimuladorCanvas() {
+            const canvas = document.getElementById('canvas-zaranda');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+
+            function ajustarCanvas() {
+                canvas.width = canvas.parentElement.clientWidth;
+                canvas.height = canvas.parentElement.clientHeight;
+            }
+            ajustarCanvas();
+            window.addEventListener('resize', ajustarCanvas);
+
+            particulas = [];
+            for (let i = 0; i < 60; i++) {
+                particulas.push({
+                    x: Math.random() * canvas.width * 0.3,
+                    y: canvas.height * 0.2 + Math.random() * 40,
+                    vx: 2 + Math.random() * 2,
+                    vy: (Math.random() - 0.5) * 1,
+                    radio: 3 + Math.random() * 3,
+                    color: Math.random() > 0.4 ? '#f59e0b' : '#10b981'
+                });
+            }
+
+            function animar() {
+                ctx.fillStyle = 'rgba(2, 6, 23, 0.3)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                const anguloZaranda = 0.15;
+                const offsetX = 40;
+                const offsetY = 60;
+                const anchoZaranda = canvas.width - 80;
+                const numPisos = parseInt(document.getElementById('pisos-select').value) || 3;
+
+                for (let p = 0; p < numPisos; p++) {
+                    const yPiso = offsetY + p * 80;
+                    ctx.strokeStyle = p === 0 ? '#f59e0b' : (p === 1 ? '#10b981' : '#0ea5e9');
+                    ctx.lineWidth = 3;
+                    ctx.beginPath();
+                    ctx.moveTo(offsetX, yPiso + (offsetX * anguloZaranda));
+                    ctx.lineTo(offsetX + anchoZaranda, yPiso + (anchoZaranda * anguloZaranda));
+                    ctx.stroke();
+
+                    ctx.fillStyle = '#94a3b8';
+                    ctx.font = '10px JetBrains Mono';
+                    ctx.fillText(`Cubierta Piso ${p + 1}`, offsetX + 10, yPiso + (10 * anguloZaranda) - 5);
+                }
+
+                particulas.forEach(pt => {
+                    pt.x += pt.vx;
+                    pt.y += pt.vy + Math.sin(Date.now() * 0.03 + pt.x * 0.1) * 0.6;
+
+                    if (pt.x > canvas.width - 30) {
+                        pt.x = offsetX + 10;
+                        pt.y = offsetY + 15;
+                        pt.vx = 2 + Math.random() * 2;
+                    }
+
+                    ctx.fillStyle = pt.color;
+                    ctx.beginPath();
+                    ctx.arc(pt.x, pt.y, pt.radio, 0, Math.PI * 2);
+                    ctx.fill();
+                });
+
+                requestAnimationFrame(animar);
+            }
+            animar();
+        }
+
+        function tomarFotografiaMuestra() {
+            const historial = document.getElementById('historial-muestras');
+            if (historial.querySelector('italic')) historial.innerHTML = '';
+            const ahora = new Date().toLocaleTimeString();
+            const caudal = document.getElementById('caudal-input').value;
+            const ef = document.getElementById('kpi-eficiencia').textContent;
+
+            const item = document.createElement('div');
+            item.className = 'p-2 bg-slate-900 rounded border border-slate-800 flex justify-between items-center text-xs font-mono';
+            item.innerHTML = `
+                <span class="text-amber-400">[${ahora}] Muestra Capturada</span>
+                <span class="text-slate-300">Caudal: ${caudal} t/h | Efic: ${ef}</span>
+            `;
+            historial.prepend(item);
+            alert('¡Muestra guardada con éxito en el historial!');
+        }
+
+        async function exportarReportePDF() {
+            const { jsPDF } = window.jspdf;
+            const pdf = new jsPDF('landscape', 'mm', 'a4');
+            const elemento = document.getElementById('reporte-contenido');
+
+            try {
+                const canvas = await html2canvas(elemento, { scale: 2, backgroundColor: '#020617' });
+                const imgData = canvas.toDataURL('image/png');
+                const pdfWidth = pdf.internal.pageSize.getWidth();
+                const pdfHeight = (canvas.height * (pdfWidth - 20)) / canvas.width;
+
+                pdf.setFont("helvetica", "bold");
+                pdf.setFontSize(12);
+                pdf.setTextColor(245, 158, 11);
+                pdf.text("GRAVAFILT S.A. | REPORTE EJECUTIVO DE MALLAS Y CINÉTICA", 10, 10);
+                
+                pdf.setFont("helvetica", "normal");
+                pdf.setFontSize(9);
+                pdf.setTextColor(148, 163, 184);
+                pdf.text(`Fecha de Emisión: ${new Date().toLocaleDateString()}`, 10, 16);
+
+                pdf.addImage(imgData, 'PNG', 10, 22, pdfWidth - 20, Math.min(pdfHeight, 180));
+                pdf.save('GRAVAFILT-Reporte-Mallas-Cinetica.pdf');
+            } catch (err) {
+                console.error(err);
+                alert('Error al generar el reporte PDF.');
+            }
+        }
+
+        window.onload = function() {
+            poblarSelectores();
+            calcularModelo();
+            inicializarSimuladorCanvas();
+        };
+    </script>
+</body>
+</html>
